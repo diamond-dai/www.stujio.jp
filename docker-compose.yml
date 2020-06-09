@@ -1,0 +1,79 @@
+version: "3.7"
+services:
+  # mysql
+  db:
+    image: mysql:5.7
+    volumes:
+      - mysql:/var/lib/mysql # データはdatavolumeで管理
+      - ./mysql/my.cnf:/etc/mysql/my.cnf:ro # my.cnf
+      - ./mysql/mysql_db_dump.sh:/opt/mysql_db_dump.sh:ro # dump用スクリプト
+      - ./mysql/data:/mysql-data # ホストとのデータ交換用
+      - ./seed/sql:/docker-entrypoint-initdb.d # 初期データ投入用
+    env_file:
+      - .env
+
+  # web host
+  httpd:
+    image: diamonddai/wordpress-ext
+    # image: wordpress-ext
+    depends_on:
+      - ${WORDPRESS_DB_HOST}
+    ports:
+      - 80:80
+    volumes:
+      - wp_core:/var/www/html/${WP_DIR}
+      - ./httpd/opt/bin/:/opt/bin/:ro
+      - ./httpd/opt/config/:/opt/config/
+      - ./seed/:/opt/seed/
+      - ./install/:/opt/install/
+      - ./htdocs/:/var/www/html/:cached
+      - ./themes/${WP_THEME_NAME}/:/var/www/html/${WP_DIR}/wp-content/themes/${WP_THEME_NAME}:cached
+    working_dir: /var/www/html/${WP_DIR}
+    env_file:
+      - .env
+    entrypoint: ["/opt/bin/docker-entrypoint.sh"]
+    command: ["apache2-foreground"]
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=${WORDPRESS_DB_HOST}
+    links:
+      - ${WORDPRESS_DB_HOST}
+    ports:
+      - 127.0.0.1:18180:80 # ローカルホストからしか繋げないように変更
+    volumes:
+      - phpmyadmin:/sessions
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "127.0.0.1:8025:8025" # ローカルホストからしか繋げないように変更
+    expose:
+      - "1025"
+    environment:
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /tmp
+    volumes:
+      - mailhog:/tmp
+    env_file:
+      - .env
+
+  gulp_scss:
+    image: diamonddai/gulp-scss
+    volumes:
+      - "./themes/${WP_THEME_NAME}/assets/src/scss:/opt/assets/scss/"
+      - "./themes/${WP_THEME_NAME}/assets/css:/opt/assets/css/"
+
+  webpack_ts:
+    image: diamonddai/webpack-ts
+    volumes:
+      - "./themes/${WP_THEME_NAME}/assets/src/ts:/opt/webpack/src/"
+      - "./themes/${WP_THEME_NAME}/assets/js:/opt/webpack/dist/"
+
+volumes:
+  wp_core:
+  mysql:
+  phpmyadmin:
+  mailhog:

@@ -1,0 +1,9 @@
+mysql/data
+httpd/opt/config
+
+export
+install/config.yml
+
+# uploadsなどをgit管理外にしたい場合はコメント解除
+# seed/plugins/*
+# seed/uploads/*
