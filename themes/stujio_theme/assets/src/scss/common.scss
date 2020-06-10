@@ -16,6 +16,9 @@
   }
 }
 .menu-group {
+  + .menu-group {
+    margin-top: 60px;
+  }
   .menu-group-head {
     .menu-group-title {
       font-family: 'Helvetica', Sans-serif;
