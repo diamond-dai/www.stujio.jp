@@ -77,7 +77,7 @@ if (function_exists('acf_add_local_field_group')) :
       'name' => "menu_{$i}_description",
       'type' => 'textarea',
       'instructions' => '',
-      'required' => １,
+      'required' => 1,
       'conditional_logic' => 0,
       'wrapper' => array(
         'width' => '',
